@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Base científica</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:700px;margin:20px auto;padding:0 16px}
+  input{width:100%;padding:12px;font-size:16px;box-sizing:border-box}
+  .r{margin:14px 0;padding-bottom:10px;border-bottom:1px solid #ddd}
+  small{color:#666}
+</style>
+</head>
+<body>
+<h2>Base científica</h2>
+<input id="q" placeholder="Escribe un tema, ej. lumbalgia (Enter para buscar)">
+<p id="estado"></p>
+<div id="res"></div>
+<script>
+const TOTAL = 25, MAX = 50;
+let buscando = 0;
+document.getElementById("q").addEventListener("keydown", async e => {
+  if (e.key !== "Enter") return;
+  const q = e.target.value.trim().toLowerCase();
+  if (!q) return;
+  const id = ++buscando, res = document.getElementById("res"), est = document.getElementById("estado");
+  res.innerHTML = ""; let n = 0;
+  for (let i = 1; i <= TOTAL && n < MAX; i++) {
+    if (id !== buscando) return;
+    est.textContent = `Buscando... archivo ${i} de ${TOTAL}`;
+    const txt = await (await fetch(`art_${String(i).padStart(3,"0")}.csv`)).text();
+    const filas = Papa.parse(txt, {header:true, skipEmptyLines:true}).data;
+    for (const f of filas) {
+      if ((f.titulo || "").toLowerCase().includes(q)) {
+        const url = f.enlace || f.doi || "#";
+        res.innerHTML += `<div class="r"><a href="${url}" target="_blank">${f.titulo}</a><br><small>${f["año"] || ""}</small></div>`;
+        if (++n >= MAX) break;
+      }
+    }
+  }
+  est.textContent = n ? `${n} resultados` : "Sin resultados";
+});
+</script>
+</body>
+</html>
